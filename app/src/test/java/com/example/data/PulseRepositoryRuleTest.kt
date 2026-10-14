@@ -22,13 +22,17 @@ class PulseRepositoryRuleTest : FirestoreEmulatorTestBase() {
             val repository = PulseRepository(firestore)
 
             // Bootstrap profile first for post count update
-            repository.saveUserProfile(
+            val saveResult = repository.saveUserProfile(
                 UserProfile(
                     userId = uid,
                     username = "alice_test",
                     displayName = "Alice Wonderland"
                 )
             )
+            if (saveResult.isFailure) {
+                println("ALICE SAVE FAILED: ${saveResult.exceptionOrNull()}")
+            }
+            assertTrue("Alice saveUserProfile should succeed: ${saveResult.exceptionOrNull()}", saveResult.isSuccess)
 
             val uniqueContent = "Testing Pulse Post ${UUID.randomUUID()}"
             val result = withTimeout(DEFAULT_TIMEOUT_MS) {
@@ -66,7 +70,10 @@ class PulseRepositoryRuleTest : FirestoreEmulatorTestBase() {
             val saveResult = withTimeout(DEFAULT_TIMEOUT_MS) {
                 repository.saveUserProfile(profile)
             }
-            assertTrue("saveUserProfile should succeed", saveResult.isSuccess)
+            if (saveResult.isFailure) {
+                saveResult.exceptionOrNull()?.printStackTrace()
+            }
+            assertTrue("saveUserProfile should succeed: ${saveResult.exceptionOrNull()}", saveResult.isSuccess)
 
             val fetchedProfile = withTimeout(DEFAULT_TIMEOUT_MS) {
                 repository.observeUserProfile(uid).first { it != null }
