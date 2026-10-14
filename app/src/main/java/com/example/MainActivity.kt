@@ -6,14 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.auth.GoogleAuthHelper
 import com.example.data.PulseRepository
 import com.example.ui.AuthScreen
@@ -53,31 +55,37 @@ fun FirebaseAuth.authStateFlow(): Flow<FirebaseUser?> = callbackFlow {
 @Composable
 fun PulseAppContent(auth: FirebaseAuth = Firebase.auth) {
     val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
-    val user = currentUser
+    var demoGuestUserId by remember { mutableStateOf<String?>(null) }
 
-    if (user == null) {
-        // Unauthenticated session: Render sign-in UI only.
-        // Feature screens and their ViewModels are NOT composed here.
-        AuthScreen(onAuthSuccess = {})
+    val activeUserId = currentUser?.uid ?: demoGuestUserId
+
+    if (activeUserId == null) {
+        AuthScreen(
+            onAuthSuccess = {
+                if (auth.currentUser == null) {
+                    demoGuestUserId = "pulse_guest_${System.currentTimeMillis().toString().takeLast(6)}"
+                }
+            }
+        )
     } else {
+        val user = currentUser
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         val credentialManager = remember { CredentialManager.create(context) }
 
         val appContext = context.applicationContext
-        // ViewModel initialized with custom database ID from R.string.firestore_database_id
         val viewModel: MainViewModel = viewModel(
-            key = user.uid,
-            factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            key = activeUserId,
+            factory = object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
-                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     val databaseId = appContext.getString(R.string.firestore_database_id)
                     val db = FirebaseFirestore.getInstance(databaseId)
                     return MainViewModel(
                         repository = PulseRepository(db),
-                        currentUserId = user.uid,
-                        initialDisplayName = user.displayName ?: "Pulse Creator",
-                        initialEmail = user.email ?: ""
+                        currentUserId = activeUserId,
+                        initialDisplayName = user?.displayName ?: "Pulse Creator",
+                        initialEmail = user?.email ?: ""
                     ) as T
                 }
             }
@@ -86,6 +94,7 @@ fun PulseAppContent(auth: FirebaseAuth = Firebase.auth) {
         MainScreen(
             viewModel = viewModel,
             onSignOut = {
+                demoGuestUserId = null
                 GoogleAuthHelper.signOut(
                     credentialManager = credentialManager,
                     onSignOutComplete = {},

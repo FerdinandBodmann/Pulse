@@ -118,11 +118,27 @@ object GoogleAuthHelper {
                     onAuthError("Unexpected credential format received")
                 }
             } catch (e: GetCredentialCancellationException) {
-                Log.w(TAG, "Google Sign-In cancelled or dismissed: ${e.message}", e)
-                onAuthCancelled()
+                Log.w(TAG, "Google Sign-In cancelled or failed: ${e.message}", e)
+                onAuthError("Google Sign-In failed or was cancelled. Use 'Continue as Guest' to explore Pulse.")
             } catch (e: Exception) {
                 Log.e(TAG, "Google Sign-In failed", e)
                 onAuthError(e.localizedMessage ?: "Sign in failed")
+            }
+        }
+    }
+
+    fun signInAsGuest(
+        onAuthSuccess: () -> Unit,
+        onAuthError: (String) -> Unit,
+        scope: CoroutineScope
+    ) {
+        scope.launch {
+            try {
+                Firebase.auth.signInAnonymously().await()
+                onAuthSuccess()
+            } catch (e: Exception) {
+                Log.e(TAG, "Guest sign in failed", e)
+                onAuthError(e.localizedMessage ?: "Guest sign in failed")
             }
         }
     }
