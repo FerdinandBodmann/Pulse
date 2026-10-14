@@ -180,19 +180,25 @@ class MainViewModel(
     val userMessage = _userMessage.asStateFlow()
 
     init {
-        // Auto-bootstrap profile if missing
+        // Bootstrap profile ONLY if missing
         viewModelScope.launch {
-            val emailPrefix = initialEmail.substringBefore("@").replace(".", "").ifBlank { "user" }
-            val defaultHandle = emailPrefix.take(20).lowercase()
-            repository.saveUserProfile(
-                UserProfile(
-                    userId = currentUserId,
-                    username = defaultHandle,
-                    displayName = initialDisplayName.ifBlank { "Pulse Creator" },
-                    bio = "Connecting on Pulse ⚡",
-                    bannerColor = "#6366F1"
+            val existing = repository.getUserProfile(currentUserId)
+            if (existing == null) {
+                val emailPrefix = initialEmail.substringBefore("@").replace(".", "").ifBlank { "user" }
+                val defaultHandle = emailPrefix.take(20).lowercase()
+                repository.saveUserProfile(
+                    UserProfile(
+                        userId = currentUserId,
+                        username = defaultHandle,
+                        displayName = initialDisplayName.ifBlank { "Pulse Creator" },
+                        bio = "Connecting on Pulse ⚡",
+                        bannerColor = "#6366F1",
+                        followersCount = 0,
+                        followingCount = 0,
+                        postsCount = 0
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -348,21 +354,17 @@ class MainViewModel(
         bannerColor: String
     ) {
         viewModelScope.launch {
-            val current = userProfile.value
-            val updated = (current ?: UserProfile(userId = currentUserId)).copy(
-                username = username.trim().lowercase(),
-                displayName = displayName.trim(),
-                bio = bio.trim(),
-                avatarUrl = avatarUrl.trim(),
+            repository.updateUserProfile(
+                username = username,
+                displayName = displayName,
+                bio = bio,
+                avatarUrl = avatarUrl,
                 bannerColor = bannerColor
-            )
-            repository.saveUserProfile(updated)
-                .onSuccess {
-                    _userMessage.value = "Profile updated!"
-                }
-                .onFailure {
-                    _userMessage.value = "Failed to update profile: ${it.localizedMessage}"
-                }
+            ).onSuccess {
+                _userMessage.value = "Profile updated!"
+            }.onFailure {
+                _userMessage.value = "Failed to update profile: ${it.localizedMessage}"
+            }
         }
     }
 }

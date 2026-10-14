@@ -1,6 +1,5 @@
 package com.example.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,7 +64,6 @@ fun AuthScreen(
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
     var isLoading by remember { mutableStateOf(false) }
-    var isGuestLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Attempt silent auto-sign-in on initial composition
@@ -230,7 +226,7 @@ fun AuthScreen(
                         .fillMaxWidth()
                         .height(56.dp)
                         .testTag("google_sign_in_button"),
-                    enabled = !isLoading && !isGuestLoading,
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PulseVioletPrimary,
@@ -266,63 +262,7 @@ fun AuthScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Guest / Quick Demo Mode Sign-In
-                OutlinedButton(
-                    onClick = {
-                        isGuestLoading = true
-                        errorMessage = null
-                        GoogleAuthHelper.signInAsGuest(
-                            onAuthSuccess = {
-                                isGuestLoading = false
-                                onAuthSuccess()
-                            },
-                            onAuthError = { err ->
-                                isGuestLoading = false
-                                errorMessage = err
-                            },
-                            scope = coroutineScope
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("guest_sign_in_button"),
-                    enabled = !isLoading && !isGuestLoading,
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, PulseVioletLight.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
-                    )
-                ) {
-                    if (isGuestLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = "Guest Sign In",
-                                tint = PulseCyanLight,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Continue as Guest",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     text = "Sign in to create your profile, post media, and follow friends.",

@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="firestore_database_id" translatable="false">ai-studio-android-pulse-100fe94a-e276-4ec7-8a31-b60ebd482eca</string>
-    <string name="google_app_id" translatable="false">1:100000000000:android:aistudio123456</string>
-    <string name="project_id" translatable="false">aistudio-pulse</string>
-    <string name="google_api_key" translatable="false">AIzaSyDummyApiKeyForPulseApp123456</string>
-    <string name="gcm_defaultSenderId" translatable="false">100000000000</string>
-    <string name="default_web_client_id" translatable="false">100000000000-dummywebclientid.apps.googleusercontent.com</string>
 </resources>

@@ -36,7 +36,7 @@ abstract class FirestoreEmulatorTestBase {
         databaseId = if (resId != 0) context.getString(resId) else "ai-studio-android-pulse-100fe94a-e276-4ec7-8a31-b60ebd482eca"
 
         val app = if (FirebaseApp.getApps(context).isEmpty()) {
-            val newApp = FirebaseApp.initializeApp(
+            FirebaseApp.initializeApp(
                 context,
                 FirebaseOptions.Builder()
                     .setApplicationId("com.aistudio.pulse.scnet")
@@ -44,21 +44,22 @@ abstract class FirestoreEmulatorTestBase {
                     .setApiKey("fake-api-key-for-emulator")
                     .build()
             )
-            val newFirestore = FirebaseFirestore.getInstance(newApp, databaseId)
-            newFirestore.useEmulator(EMULATOR_HOST, FIRESTORE_PORT)
-            newFirestore.firestoreSettings = FirebaseFirestoreSettings.Builder()
-                .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
-                .build()
-
-            val newAuth = FirebaseAuth.getInstance(newApp)
-            newAuth.useEmulator(EMULATOR_HOST, AUTH_PORT)
-            newApp
         } else {
             FirebaseApp.getInstance()
         }
 
         firestore = FirebaseFirestore.getInstance(app, databaseId)
+        try {
+            firestore.useEmulator(EMULATOR_HOST, FIRESTORE_PORT)
+            firestore.firestoreSettings = FirebaseFirestoreSettings.Builder()
+                .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
+                .build()
+        } catch (_: IllegalStateException) {}
+
         auth = FirebaseAuth.getInstance(app)
+        try {
+            auth.useEmulator(EMULATOR_HOST, AUTH_PORT)
+        } catch (_: IllegalStateException) {}
     }
 
     @After

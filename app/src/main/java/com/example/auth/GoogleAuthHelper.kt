@@ -8,6 +8,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -23,19 +24,6 @@ private const val TAG = "PulseAuth"
 
 object GoogleAuthHelper {
 
-    private fun getDefaultWebClientId(context: Context): String? {
-        val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-        return if (resId != 0) {
-            try {
-                context.getString(resId).ifEmpty { null }
-            } catch (_: Exception) {
-                null
-            }
-        } else {
-            null
-        }
-    }
-
     fun attemptAutoSignIn(
         context: Context,
         credentialManager: CredentialManager,
@@ -48,9 +36,10 @@ object GoogleAuthHelper {
             return
         }
 
-        val clientId = getDefaultWebClientId(context)
-        if (clientId == null) {
-            Log.w(TAG, "Web client ID not found")
+        val clientId = try {
+            context.getString(R.string.default_web_client_id)
+        } catch (e: Exception) {
+            Log.w(TAG, "Web client ID not found: ${e.message}")
             onUnauthenticated()
             return
         }
@@ -92,8 +81,9 @@ object GoogleAuthHelper {
         scope: CoroutineScope,
         onAuthCancelled: () -> Unit = {}
     ) {
-        val clientId = getDefaultWebClientId(context)
-        if (clientId == null) {
+        val clientId = try {
+            context.getString(R.string.default_web_client_id)
+        } catch (e: Exception) {
             onAuthError("Google Sign-In configuration missing: default_web_client_id not found")
             return
         }
@@ -118,27 +108,11 @@ object GoogleAuthHelper {
                     onAuthError("Unexpected credential format received")
                 }
             } catch (e: GetCredentialCancellationException) {
-                Log.w(TAG, "Google Sign-In cancelled or failed: ${e.message}", e)
-                onAuthError("Google Sign-In failed or was cancelled. Use 'Continue as Guest' to explore Pulse.")
+                Log.w(TAG, "Google Sign-In flow cancelled or dismissed: ${e.message}", e)
+                onAuthCancelled()
             } catch (e: Exception) {
                 Log.e(TAG, "Google Sign-In failed", e)
                 onAuthError(e.localizedMessage ?: "Sign in failed")
-            }
-        }
-    }
-
-    fun signInAsGuest(
-        onAuthSuccess: () -> Unit,
-        onAuthError: (String) -> Unit,
-        scope: CoroutineScope
-    ) {
-        scope.launch {
-            try {
-                Firebase.auth.signInAnonymously().await()
-                onAuthSuccess()
-            } catch (e: Exception) {
-                Log.e(TAG, "Guest sign in failed", e)
-                onAuthError(e.localizedMessage ?: "Guest sign in failed")
             }
         }
     }

@@ -55,27 +55,22 @@ fun FirebaseAuth.authStateFlow(): Flow<FirebaseUser?> = callbackFlow {
 @Composable
 fun PulseAppContent(auth: FirebaseAuth = Firebase.auth) {
     val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
-    var demoGuestUserId by remember { mutableStateOf<String?>(null) }
 
-    val activeUserId = currentUser?.uid ?: demoGuestUserId
-
-    if (activeUserId == null) {
+    val user = currentUser
+    if (user == null) {
         AuthScreen(
             onAuthSuccess = {
-                if (auth.currentUser == null) {
-                    demoGuestUserId = "pulse_guest_${System.currentTimeMillis().toString().takeLast(6)}"
-                }
+                // Auth state updates automatically via authStateFlow
             }
         )
     } else {
-        val user = currentUser
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         val credentialManager = remember { CredentialManager.create(context) }
 
         val appContext = context.applicationContext
         val viewModel: MainViewModel = viewModel(
-            key = activeUserId,
+            key = user.uid,
             factory = object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -83,9 +78,9 @@ fun PulseAppContent(auth: FirebaseAuth = Firebase.auth) {
                     val db = FirebaseFirestore.getInstance(databaseId)
                     return MainViewModel(
                         repository = PulseRepository(db),
-                        currentUserId = activeUserId,
-                        initialDisplayName = user?.displayName ?: "Pulse Creator",
-                        initialEmail = user?.email ?: ""
+                        currentUserId = user.uid,
+                        initialDisplayName = user.displayName ?: "Pulse Creator",
+                        initialEmail = user.email ?: ""
                     ) as T
                 }
             }
@@ -94,7 +89,6 @@ fun PulseAppContent(auth: FirebaseAuth = Firebase.auth) {
         MainScreen(
             viewModel = viewModel,
             onSignOut = {
-                demoGuestUserId = null
                 GoogleAuthHelper.signOut(
                     credentialManager = credentialManager,
                     onSignOutComplete = {},

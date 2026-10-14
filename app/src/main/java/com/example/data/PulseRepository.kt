@@ -53,6 +53,19 @@ class PulseRepository(private val db: FirebaseFirestore) {
             }
     }
 
+    suspend fun getUserProfile(userId: String): UserProfile? {
+        val docRef = db.collection("users").document(userId)
+        return try {
+            val snapshot = docRef.get().await()
+            if (snapshot.exists()) {
+                snapshot.toObject(UserProfile::class.java, DocumentSnapshot.ServerTimestampBehavior.ESTIMATE)
+            } else null
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.GET, docRef.path)
+            null
+        }
+    }
+
     suspend fun saveUserProfile(profile: UserProfile): Result<Unit> = runCatching {
         val uid = requireUserId()
         val docRef = db.collection("users").document(uid)
@@ -72,6 +85,31 @@ class PulseRepository(private val db: FirebaseFirestore) {
             ).filterValues { it != null }
 
             docRef.set(payload).await()
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.WRITE, docRef.path)
+            throw e
+        }
+    }
+
+    suspend fun updateUserProfile(
+        username: String,
+        displayName: String,
+        bio: String,
+        avatarUrl: String = "",
+        bannerColor: String = ""
+    ): Result<Unit> = runCatching {
+        val uid = requireUserId()
+        val docRef = db.collection("users").document(uid)
+        try {
+            val updates = mutableMapOf<String, Any>(
+                "username" to username.trim().lowercase(),
+                "displayName" to displayName.trim(),
+                "bio" to bio.trim(),
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+            if (avatarUrl.isNotBlank()) updates["avatarUrl"] = avatarUrl.trim()
+            if (bannerColor.isNotBlank()) updates["bannerColor"] = bannerColor
+            docRef.update(updates).await()
         } catch (e: Exception) {
             handleFirestoreError(e, OperationType.WRITE, docRef.path)
             throw e
@@ -345,8 +383,16 @@ class PulseRepository(private val db: FirebaseFirestore) {
         try {
             if (currentlyFollowing) {
                 followDoc.delete().await()
-                userDoc.update("followingCount", FieldValue.increment(-1)).await()
-                targetUserDoc.update("followersCount", FieldValue.increment(-1)).await()
+                userDoc.update(
+                    "followingCount", FieldValue.increment(-1),
+                    "updatedAt", FieldValue.serverTimestamp()
+                ).await()
+                runCatching {
+                    targetUserDoc.update(
+                        "followersCount", FieldValue.increment(-1),
+                        "updatedAt", FieldValue.serverTimestamp()
+                    ).await()
+                }
             } else {
                 followDoc.set(mapOf(
                     "targetUserId" to targetUserId,
@@ -355,8 +401,16 @@ class PulseRepository(private val db: FirebaseFirestore) {
                     "targetDisplayName" to targetDisplayName,
                     "createdAt" to FieldValue.serverTimestamp()
                 )).await()
-                userDoc.update("followingCount", FieldValue.increment(1)).await()
-                targetUserDoc.update("followersCount", FieldValue.increment(1)).await()
+                userDoc.update(
+                    "followingCount", FieldValue.increment(1),
+                    "updatedAt", FieldValue.serverTimestamp()
+                ).await()
+                runCatching {
+                    targetUserDoc.update(
+                        "followersCount", FieldValue.increment(1),
+                        "updatedAt", FieldValue.serverTimestamp()
+                    ).await()
+                }
             }
         } catch (e: Exception) {
             handleFirestoreError(e, OperationType.WRITE, followDoc.path)

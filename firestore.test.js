@@ -147,3 +147,38 @@ test("Authenticated user: can like a post with own userId", async () => {
     })
   );
 });
+
+test("Authenticated user: can update target user followersCount when following", async () => {
+  const now = new Date();
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await context.firestore().collection("users").doc(BOB_UID).set({
+      userId: BOB_UID,
+      username: "bob_builder",
+      displayName: "Bob Builder",
+      followersCount: 5,
+      followingCount: 2,
+      postsCount: 1,
+      createdAt: now,
+    });
+  });
+
+  const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
+  // Alice adds follow record in her following subcollection
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("following").doc(BOB_UID).set({
+      targetUserId: BOB_UID,
+      userId: ALICE_UID,
+      targetUsername: "bob_builder",
+      targetDisplayName: "Bob Builder",
+      createdAt: new Date(),
+    })
+  );
+
+  // Alice updates Bob's followersCount
+  await assertSucceeds(
+    aliceDb.collection("users").doc(BOB_UID).update({
+      followersCount: 6,
+    })
+  );
+});
+

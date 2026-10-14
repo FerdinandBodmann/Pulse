@@ -96,12 +96,19 @@ service cloud.firestore {
                        incoming().createdAt <= request.time &&
                        isValidUserProfile(incoming());
 
-      allow update: if isSignedIn() &&
-                       request.auth.uid == userId &&
-                       incoming().userId == existing().userId &&
-                       incoming().createdAt == existing().createdAt &&
-                       isValidUserProfile(incoming()) &&
-                       incoming().diff(existing()).affectedKeys().hasOnly(['username', 'displayName', 'bio', 'avatarUrl', 'bannerColor', 'followersCount', 'followingCount', 'postsCount', 'updatedAt']);
+      allow update: if isSignedIn() && (
+                       // Case 1: Owner updates profile
+                       (request.auth.uid == userId &&
+                        incoming().userId == existing().userId &&
+                        incoming().createdAt == existing().createdAt &&
+                        isValidUserProfile(incoming()) &&
+                        incoming().diff(existing()).affectedKeys().hasOnly(['username', 'displayName', 'bio', 'avatarUrl', 'bannerColor', 'followersCount', 'followingCount', 'postsCount', 'updatedAt'])) ||
+                       // Case 2: Signed-in user follows/unfollows, updating followersCount
+                       (incoming().diff(existing()).affectedKeys().hasOnly(['followersCount', 'updatedAt']) &&
+                        incoming().userId == existing().userId &&
+                        incoming().createdAt == existing().createdAt &&
+                        isValidUserProfile(incoming()))
+                     );
 
       allow delete: if isSignedIn() && request.auth.uid == userId;
 
