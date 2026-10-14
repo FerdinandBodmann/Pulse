@@ -1,0 +1,266 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile information on Pulse",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique Google user ID"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique @ handle of the user"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user"
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short bio or tagline"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Profile picture URL or avatar token"
+        },
+        "bannerColor": {
+          "type": "string",
+          "description": "Hex banner color or gradient code"
+        },
+        "followersCount": {
+          "type": "integer",
+          "description": "Number of followers"
+        },
+        "followingCount": {
+          "type": "integer",
+          "description": "Number of followed users"
+        },
+        "postsCount": {
+          "type": "integer",
+          "description": "Total posts created"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp via serverTimestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last updated timestamp via serverTimestamp"
+        }
+      },
+      "required": ["userId", "username", "displayName", "createdAt"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Social feed post created by a user",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Author UID"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Author display name"
+        },
+        "authorHandle": {
+          "type": "string",
+          "description": "Author @ handle"
+        },
+        "authorAvatar": {
+          "type": "string",
+          "description": "Author avatar token or URL"
+        },
+        "content": {
+          "type": "string",
+          "description": "Body text of the post"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category tag for discovery"
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "Media attachment type: text, image, or video"
+        },
+        "mediaUrl": {
+          "type": "string",
+          "description": "Media URL or visual asset token"
+        },
+        "videoDuration": {
+          "type": "string",
+          "description": "Video duration label for short videos"
+        },
+        "mediaColor": {
+          "type": "string",
+          "description": "Color or visual gradient style for post card"
+        },
+        "likesCount": {
+          "type": "integer",
+          "description": "Total like count"
+        },
+        "commentsCount": {
+          "type": "integer",
+          "description": "Total comment count"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp via serverTimestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last updated timestamp via serverTimestamp"
+        }
+      },
+      "required": ["userId", "authorName", "authorHandle", "content", "category", "createdAt"]
+    },
+    "PostLike": {
+      "title": "PostLike",
+      "description": "Like record by an authenticated user",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of user who liked"
+        },
+        "postId": {
+          "type": "string",
+          "description": "ID of post liked"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of like"
+        }
+      },
+      "required": ["userId", "postId", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Comment on a post",
+      "type": "object",
+      "properties": {
+        "postId": {
+          "type": "string",
+          "description": "Target post ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of commenter"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Display name of commenter"
+        },
+        "authorAvatar": {
+          "type": "string",
+          "description": "Commenter avatar token or URL"
+        },
+        "text": {
+          "type": "string",
+          "description": "Comment message body"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of comment"
+        }
+      },
+      "required": ["postId", "userId", "authorName", "text", "createdAt"]
+    },
+    "Story": {
+      "title": "Story",
+      "description": "Short ephemeral story moment",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Author UID"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Author display name"
+        },
+        "authorAvatar": {
+          "type": "string",
+          "description": "Author avatar token"
+        },
+        "content": {
+          "type": "string",
+          "description": "Story text"
+        },
+        "mediaColor": {
+          "type": "string",
+          "description": "Story background accent color"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of story creation"
+        }
+      },
+      "required": ["userId", "authorName", "content", "createdAt"]
+    },
+    "FollowRecord": {
+      "title": "FollowRecord",
+      "description": "Follow relationship entry",
+      "type": "object",
+      "properties": {
+        "targetUserId": {
+          "type": "string",
+          "description": "Target UID being followed"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Follower UID"
+        },
+        "targetUsername": {
+          "type": "string",
+          "description": "Target user handle"
+        },
+        "targetDisplayName": {
+          "type": "string",
+          "description": "Target user display name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when followed"
+        }
+      },
+      "required": ["targetUserId", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles"
+    },
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "Social feed posts"
+    },
+    "/posts/{postId}/likes/{userId}": {
+      "schema": { "$ref": "#/entities/PostLike" },
+      "description": "Likes on a post"
+    },
+    "/posts/{postId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Comments on a post"
+    },
+    "/stories/{storyId}": {
+      "schema": { "$ref": "#/entities/Story" },
+      "description": "Stories and moments"
+    },
+    "/users/{userId}/following/{targetUserId}": {
+      "schema": { "$ref": "#/entities/FollowRecord" },
+      "description": "Follow relationships"
+    }
+  }
+}

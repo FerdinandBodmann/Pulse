@@ -1,0 +1,6 @@
+{
+  "name": "Pulse",
+  "description": "Pulse - Next-generation social network featuring rich feeds, stories, real-time posts, likes, comments, profiles, user search, and secure Google Sign-in with Firestore sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
